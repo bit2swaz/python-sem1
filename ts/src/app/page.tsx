@@ -1,4 +1,3 @@
-// src/app/page.tsx
 import Link from "next/link";
 
 export default function HomePage() {
@@ -25,18 +24,17 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Add more links here as you solve more problems */}
-          {/*
+          {/* Link to Climate Change Data Analyzer Problem */}
           <Link
-            href="/climate-change-data-analyzer"
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-gray-800 p-6 text-gray-100 hover:bg-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105 shadow-md border border-gray-600"
+            href="/climate-analyzer"
+            className="flex max-w-xs transform flex-col gap-4 rounded-xl border border-gray-600 bg-gray-800 p-6 text-gray-100 shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:bg-gray-700"
           >
-            <h3 className="text-2xl font-bold">Climate Change Data Analyzer →</h3>
+            <h3 className="text-2xl font-bold">Climate Data Analyzer →</h3>
             <div className="text-lg">
-              Analyze temperature data to find highest, lowest, and average.
+              Analyze daily temperatures: highest, lowest, and average.
             </div>
           </Link>
-          */}
+          {/* Add more links here as you solve more problems */}
         </div>
       </div>
     </main>
