@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-// src/components/subsidy-calculator.tsx
-"use client"; // This directive makes this component a Client Component
+"use client";
 
 import React, { useState } from "react";
 import { CropType, type CropDetails } from "../types"; // Import types from your new types file
