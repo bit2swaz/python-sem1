@@ -1,3 +1,4 @@
+// src/app/page.tsx
 import Link from "next/link";
 
 export default function HomePage() {
@@ -35,6 +36,16 @@ export default function HomePage() {
             </div>
           </Link>
 
+          {/* NEW: Link to Username Validator Problem */}
+          <Link
+            href="/username-validator"
+            className="flex max-w-xs transform flex-col gap-4 rounded-xl border border-gray-600 bg-gray-800 p-6 text-gray-100 shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:bg-gray-700"
+          >
+            <h3 className="text-2xl font-bold">Username Validator →</h3>
+            <div className="text-lg">
+              Validate game usernames based on specific rules.
+            </div>
+          </Link>
           {/* NEW: Link to Number Game Problem */}
           <Link
             href="/number-game"
