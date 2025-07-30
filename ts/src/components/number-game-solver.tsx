@@ -1,4 +1,4 @@
-"use client";
+"use client"; // This directive makes this component a Client Component
 
 import React, { useState } from "react";
 
@@ -206,9 +206,16 @@ const NumberGameSolver: React.FC = () => {
       numbers.push(num);
     }
 
+    // --- FIX START ---
+    if (targetInput.trim() === "") {
+      setErrorMessage("Target cannot be empty. Please enter an integer.");
+      return;
+    }
+    // --- FIX END ---
+
     const target = parseInt(targetInput.trim());
     if (isNaN(target)) {
-      setErrorMessage("Invalid Target. Please enter an integer.");
+      setErrorMessage("Invalid Target. Please enter a valid integer."); // Changed message slightly
       return;
     }
 
