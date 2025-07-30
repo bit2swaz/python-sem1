@@ -22,11 +22,51 @@ const evaluateOperation = (a: number, op: string, b: number): number => {
       return a * b;
     case "/":
       if (b === 0) return NaN;
-      if (a % b !== 0) return NaN;
+      if (a % b !== 0) return NaN; // Must result in integers only
       return a / b;
     default:
-      return NaN;
+      return NaN; // Should not happen with defined OPERATIONS
   }
+};
+
+/**
+ * Evaluates a full arithmetic expression string from left-to-right.
+ * Assumes the expression is well-formed (e.g., "num op num op num").
+ * @param expression The arithmetic expression string.
+ * @returns The numeric result of the expression, or NaN if any operation is invalid.
+ */
+const evaluateExpressionString = (expression: string): number => {
+  // Split the expression into numbers and operators, maintaining order
+  // This regex matches either a sequence of digits OR any of the operators
+  const parts = expression.match(/(\d+)|([+\-*/])/g);
+
+  if (!parts || parts.length === 0) {
+    return NaN;
+  }
+
+  let currentVal: number = parseFloat(parts[0]);
+  if (isNaN(currentVal)) return NaN;
+
+  for (let i = 1; i < parts.length; i += 2) {
+    const op = parts[i]; // Operator
+    const nextNumStr = parts[i + 1]; // Next number as string
+
+    // Ensure operator and next number string exist
+    if (!op || !nextNumStr) {
+      return NaN; // Malformed expression, e.g., ends with an operator
+    }
+
+    const nextNum = parseFloat(nextNumStr);
+    if (isNaN(nextNum)) {
+      return NaN; // Next part is not a valid number
+    }
+
+    currentVal = evaluateOperation(currentVal, op, nextNum);
+    if (isNaN(currentVal)) {
+      return NaN; // Propagate NaN from evaluateOperation (e.g., division by zero)
+    }
+  }
+  return currentVal;
 };
 
 /**
@@ -64,34 +104,39 @@ const NumberGameSolver: React.FC = () => {
     }
 
     let bestDiff = Infinity;
-    const bestExpressions = new Set<string>();
+    const bestExpressions = new Set<string>(); // Use a Set to store unique expressions
 
     const permutations = getPermutations(nums);
 
     for (const perm of permutations) {
+      // Recursive function to explore operator combinations for a given number permutation
       const exploreOperators = (
         index: number,
         currentValue: number,
         currentExpression: string,
       ) => {
+        // Base case: All numbers in the current permutation have been used
         if (index === perm.length) {
           const diff = Math.abs(currentValue - target);
 
           if (diff < bestDiff) {
             bestDiff = diff;
-            bestExpressions.clear();
+            bestExpressions.clear(); // Clear previous best if a new better one is found
             bestExpressions.add(currentExpression);
           } else if (diff === bestDiff) {
-            bestExpressions.add(currentExpression);
+            bestExpressions.add(currentExpression); // Add to set if it's equally good
           }
           return;
         }
 
+        // Recursive step: Try all operations with the next number
         for (const op of OPERATIONS) {
-          const nextNum = perm[index];
+          // Assert that perm[index] is a number because `index` is always valid here
+          // (checked by `index === perm.length` base case)
+          const nextNum = perm[index]!;
           const nextValue = evaluateOperation(currentValue, op, nextNum);
 
-          // If evaluation resulted in NaN (invalid operation like division by zero or non-integer division), skip
+          // If evaluation resulted in NaN (invalid operation like division by zero or non-integer division), skip this path
           if (isNaN(nextValue)) {
             continue;
           }
@@ -104,38 +149,35 @@ const NumberGameSolver: React.FC = () => {
         }
       };
 
-      // Start exploring operators with the first number of the permutation
-      exploreOperators(1, perm[0], perm[0].toString());
+      // Start exploring operators with the first number of the current permutation
+      // Assert that perm[0] is a number because permutations generated from non-empty nums are non-empty
+      exploreOperators(1, perm[0]!, perm[0]!.toString());
     }
 
     if (bestExpressions.size === 0) {
-      return "No solution found"; // Should ideally not happen if numbers are provided
+      // This case should ideally not be reached if numbers are provided and operations are possible
+      return "No solution found";
     } else if (bestExpressions.size > 1) {
-      // Check if any of the best expressions is an exact match
-      const exactMatch = Array.from(bestExpressions).find((expr) => {
-        // Re-evaluate the expression to be sure, though it should match bestDiff
-        const parts = expr.match(/(\d+)([+\-*/])(\d+)/g) || []; // Simple regex for parts, needs careful evaluation
-        let val = parseInt(expr.split(/[+\-*/]/)[0] || "0"); // Start with first number
-        for (const part of parts) {
-          const match = /(\d+)([+\-*/])(\d+)/.exec(part);
-          if (match) {
-            const [, num1Str, op, num2Str] = match;
-            val = evaluateOperation(val, op, parseInt(num2Str));
-          }
-        }
-        return val === target;
+      // Check if any of the best expressions is an exact match (diff is 0)
+      // We re-evaluate using the new robust `evaluateExpressionString`
+      const hasExactMatch = Array.from(bestExpressions).some((expr) => {
+        return evaluateExpressionString(expr) === target;
       });
 
-      if (bestDiff === 0 && exactMatch) {
-        return "No single solution";
-      } else if (bestDiff === 0) {
-        // This case should be covered by exactMatch check, but as a fallback
-        return "No single solution";
+      // If bestDiff is 0 and there are multiple expressions that achieve it, return "No single solution"
+      // Or if bestDiff > 0 and multiple expressions achieve the same closest result, also "No single solution"
+      if (bestDiff === 0 && hasExactMatch) {
+        return "No single solution"; // Multiple exact solutions
+      } else if (bestDiff > 0 && bestExpressions.size > 1) {
+        return "No single solution"; // Multiple closest solutions
       }
-      return "No single solution";
-    } else {
-      return bestExpressions.values().next().value;
+      // If bestDiff is 0 and only one expression, it's the unique exact solution.
+      // If bestDiff > 0 and only one expression, it's the unique closest solution.
     }
+
+    // If we reach here, there's exactly one best expression (either exact or closest)
+    // Assert that .value is a string because we know bestExpressions.size is 1
+    return bestExpressions.values().next().value!;
   };
 
   const handleSolve = () => {
@@ -173,10 +215,7 @@ const NumberGameSolver: React.FC = () => {
     // Sort numbers to handle permutations more efficiently if needed, though getPermutations handles it.
     // For this problem, the order of input numbers doesn't matter for the set of numbers,
     // but their order in an expression does. So, sorting before permuting is fine.
-    numbers.sort((a, b) => a - b);
-
-    // If there's only one number and it's not the target, it's not a solution.
-    // The `solveNumberGame` function handles this more robustly now.
+    // numbers.sort((a, b) => a - b); // Sorting is not strictly necessary for permutation generation, can remove if desired.
 
     const result = solveNumberGame(numbers, target);
     setSolution(result);
