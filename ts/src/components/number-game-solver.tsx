@@ -1,4 +1,4 @@
-"use client"; // This directive makes this component a Client Component
+"use client";
 
 import React, { useState } from "react";
 
@@ -184,45 +184,41 @@ const NumberGameSolver: React.FC = () => {
     setSolution(null);
     setErrorMessage(null);
 
-    const rawNumbers = numbersInput
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s !== "");
     const numbers: number[] = [];
+    // Fix: Ensure numbersInput is trimmed before splitting to handle leading/trailing spaces
+    const parts = numbersInput.trim().split(",");
 
-    if (rawNumbers.length === 0) {
+    // Iterate through parts to parse numbers
+    for (const part of parts) {
+      const trimmedPart = part.trim();
+      if (trimmedPart !== "") {
+        // Only process non-empty trimmed parts
+        const num = parseInt(trimmedPart);
+        if (isNaN(num) || num <= 0) {
+          setErrorMessage(
+            `Invalid number found: "${trimmedPart}". All numbers must be positive integers.`,
+          );
+          return;
+        }
+        numbers.push(num);
+      }
+    }
+
+    if (numbers.length === 0) {
       setErrorMessage("Please enter at least one number.");
       return;
     }
 
-    for (const numStr of rawNumbers) {
-      const num = parseInt(numStr);
-      if (isNaN(num) || num <= 0) {
-        setErrorMessage(
-          `Invalid number found: "${numStr}". All numbers must be positive integers.`,
-        );
-        return;
-      }
-      numbers.push(num);
-    }
-
-    // --- FIX START ---
     if (targetInput.trim() === "") {
       setErrorMessage("Target cannot be empty. Please enter an integer.");
       return;
     }
-    // --- FIX END ---
 
     const target = parseInt(targetInput.trim());
     if (isNaN(target)) {
-      setErrorMessage("Invalid Target. Please enter a valid integer."); // Changed message slightly
+      setErrorMessage("Invalid Target. Please enter a valid integer.");
       return;
     }
-
-    // Sort numbers to handle permutations more efficiently if needed, though getPermutations handles it.
-    // For this problem, the order of input numbers doesn't matter for the set of numbers,
-    // but their order in an expression does. So, sorting before permuting is fine.
-    // numbers.sort((a, b) => a - b); // Sorting is not strictly necessary for permutation generation, can remove if desired.
 
     const result = solveNumberGame(numbers, target);
     setSolution(result);
